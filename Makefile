@@ -24,9 +24,11 @@ OBJS = \
   core-wiring_digital.o \
   core-hooks.o \
   core-Print.o \
+  core-Stream.o \
   core-CDC.o \
   core-HardwareSerial.o \
   core-HardwareSerial0.o \
+  core-WInterrupts.o \
   ardlib-SPI.o \
   NRFLite.o
 
