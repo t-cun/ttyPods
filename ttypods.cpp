@@ -26,6 +26,8 @@ const static uint8_t PIN_RADIO_CSN = 10;
 const static uint8_t PIN_RADIO_IRQ = 3;
 
 NRFLite _radio;
+byte serial_rx_buf[64];
+volatile uint8_t serial_rx_len;
 
 void radioInterrupt();
 
@@ -54,6 +56,14 @@ void setup()
 
 void loop()
 {
+    static unsigned long time_of_last_tx;
+    unsigned long now = millis();
+    if (serial_rx_len == sizeof(serial_rx_buf) || now > (time_of_last_tx + 500)) {
+        _radio.startSend(DESTINATION_RADIO_ID, serial_rx_buf, serial_rx_len, NRFLite::NO_ACK);
+        serial_rx_len = 0;
+        _radio.startRx();
+        time_of_last_tx = now;
+    }
 }
 
 void radioInterrupt()
@@ -72,9 +82,8 @@ void serialEvent()
 {
     size_t available = Serial.available();
     if (available) {
-        byte buf[64];
-        size_t length = Serial.readBytes(buf, available > sizeof(buf) ? sizeof(buf) : available);
-        _radio.startSend(DESTINATION_RADIO_ID, buf, length, NRFLite::NO_ACK);
-        _radio.startRx();
+        uint8_t buf_remaining = sizeof(serial_rx_buf) - serial_rx_len;
+        size_t length = Serial.readBytes(serial_rx_buf + serial_rx_len, available > buf_remaining ? buf_remaining : available);
+        serial_rx_len += length;
     }
 }
