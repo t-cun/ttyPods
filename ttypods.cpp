@@ -58,7 +58,7 @@ void loop()
 {
     static unsigned long time_of_last_tx;
     unsigned long now = millis();
-    if (serial_rx_len == sizeof(serial_rx_buf) || now > (time_of_last_tx + 500)) {
+    if (serial_rx_len == sizeof(serial_rx_buf) || (now > (time_of_last_tx + 500) && serial_rx_len > 0)) {
         _radio.startSend(DESTINATION_RADIO_ID, serial_rx_buf, serial_rx_len, NRFLite::NO_ACK);
         serial_rx_len = 0;
         _radio.startRx();
