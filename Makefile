@@ -6,10 +6,9 @@ CC = avr-gcc
 CXX = avr-g++
 CFLAGS ?= -Wall -Werror
 CXXFLAGS ?= -Wall -Werror
-CFLAGS += -Os -ffunction-sections -fdata-sections -flto
-CFLAGS += -DARDUINO=185 -DARDUINO_ARCH_AVR -mmcu=atmega328p -DF_CPU=16000000L
-CXXFLAGS += -Os -ffunction-sections -fdata-sections -flto -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-devirtualize
-CXXFLAGS += -DARDUINO=185 -DARDUINO_ARCH_AVR -mmcu=atmega328p -DF_CPU=16000000L
+CFLAGS += -mmcu=atmega328p -Os -ffunction-sections -fdata-sections -flto
+CXXFLAGS += -mmcu=atmega328p -Os -ffunction-sections -fdata-sections -flto -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-devirtualize
+CPPFLAGS += -DARDUINO=185 -DARDUINO_ARCH_AVR -DF_CPU=16000000L
 CPPFLAGS += -I$(ARDUINO)/avr/cores/arduino
 CPPFLAGS += -I$(ARDUINO)/avr/cores/arduino/api
 CPPFLAGS += -I$(ARDUINO)/avr/variants/standard
