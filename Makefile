@@ -8,7 +8,7 @@ CFLAGS ?= -Wall -Werror
 CXXFLAGS ?= -Wall -Werror
 CFLAGS += -mmcu=atmega328p -Os -ffunction-sections -fdata-sections -flto
 CXXFLAGS += -mmcu=atmega328p -Os -ffunction-sections -fdata-sections -flto -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-devirtualize
-CPPFLAGS += -DARDUINO=185 -DARDUINO_ARCH_AVR -DF_CPU=16000000L
+CPPFLAGS += -DARDUINO=185 -DARDUINO_ARCH_AVR -DF_CPU=16000000L -DSERIAL_RX_BUFFER_SIZE=1024
 CPPFLAGS += -I$(ARDUINO)/avr/cores/arduino
 CPPFLAGS += -I$(ARDUINO)/avr/cores/arduino/api
 CPPFLAGS += -I$(ARDUINO)/avr/variants/standard
