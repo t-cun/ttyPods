@@ -19,14 +19,18 @@ GND   -> GND
 #include <SPI.h>
 #include <NRFLite.h>
 
-const static uint8_t RADIO_ID = 0;             // Our radio's id.
-const static uint8_t DESTINATION_RADIO_ID = 1; // Id of the radio we will transmit to.
+const static uint8_t RADIO_ID = 1;             // Our radio's id.
+const static uint8_t DESTINATION_RADIO_ID = 0; // Id of the radio we will transmit to.
 const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
-
-char data;
+const static uint8_t PIN_RADIO_IRQ = 3;
 
 NRFLite _radio;
+byte serial_rx_buf[32];
+volatile uint8_t serial_rx_len;
+
+void radioInterrupt();
+
 void setup()
 {
     Serial.begin(115200);
@@ -44,29 +48,42 @@ void setup()
         Serial.println("Cannot communicate with radio");
         delay(1000);   
     }
-    
+
+    attachInterrupt(digitalPinToInterrupt(PIN_RADIO_IRQ), radioInterrupt, FALLING);
+    _radio.startRx();
+    Serial.println("Can communicate with radio yay");
 }
 
 void loop()
 {
-    
-    while(_radio.hasData())
-    {
-      _radio.readData(&data);
-      Serial.print(data); 
+    static unsigned long time_of_last_tx;
+    unsigned long now = millis();
+    if (serial_rx_len == sizeof(serial_rx_buf) || (now > (time_of_last_tx + 200) && serial_rx_len > 0)) {
+        _radio.send(DESTINATION_RADIO_ID, serial_rx_buf, serial_rx_len, NRFLite::NO_ACK);
+        serial_rx_len = 0;
+        _radio.startRx();
+        time_of_last_tx = now;
     }
+}
 
-    data = (char)Serial.read();
-    if (data > 0) {      
-      // By default, 'send' transmits data and waits for an acknowledgement.  If no acknowledgement is received,
-      // it will try again up to 16 times.  You can also perform a NO_ACK send that does not request an acknowledgement.
-      // The data packet will only be transmitted a single time so there is no guarantee it will be successful.  Any random
-      // electromagnetic interference can sporatically cause packets to be lost, so NO_ACK sends are only suited for certain
-      // types of situations, such as streaming real-time data where performance is more important than reliability.
-      //   _radio.send(DESTINATION_RADIO_ID, &_radioData, sizeof(_radioData), NRFLite::NO_ACK)
-      //   _radio.send(DESTINATION_RADIO_ID, &_radioData, sizeof(_radioData), NRFLite::REQUIRE_ACK) // THE DEFAULT
-      
-      _radio.send(DESTINATION_RADIO_ID, &data, sizeof(data), NRFLite::NO_ACK);
+void radioInterrupt()
+{
+    uint8_t txOk, txFail, rxReady;
+    _radio.whatHappened(txOk, txFail, rxReady);
+    if (rxReady) {
+        uint8_t length = _radio.hasDataISR();
+        byte buf[32];
+        _radio.readData(buf);
+        Serial.write(buf, length);
     }
+}
 
+void serialEvent()
+{
+    size_t available = Serial.available();
+    if (available) {
+        uint8_t buf_remaining = sizeof(serial_rx_buf) - serial_rx_len;
+        size_t length = Serial.readBytes(serial_rx_buf + serial_rx_len, available > buf_remaining ? buf_remaining : available);
+        serial_rx_len += length;
+    }
 }
