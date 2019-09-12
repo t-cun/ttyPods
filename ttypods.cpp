@@ -18,11 +18,13 @@ GND   -> GND
 
 #include <SPI.h>
 #include <NRFLite.h>
+#include <AESLib.h>
 
 const static uint8_t RADIO_ID = 0;             // Our radio's id.
 const static uint8_t DESTINATION_RADIO_ID = 1; // Id of the radio we will transmit to.
 const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
+uint8_t key[] = {33,85,123,201,178,144,127,222,1,92,7,35,33,69,108,173};
 
 char data;
 
@@ -52,8 +54,9 @@ void loop()
     
     while(_radio.hasData())
     {
-      _radio.readData(&data);
-      Serial.print(data); 
+        _radio.readData(&data);
+        aes128_dec_single(key, &data);
+        Serial.print(data); 
     }
 
     data = (char)Serial.read();
@@ -66,6 +69,7 @@ void loop()
       //   _radio.send(DESTINATION_RADIO_ID, &_radioData, sizeof(_radioData), NRFLite::NO_ACK)
       //   _radio.send(DESTINATION_RADIO_ID, &_radioData, sizeof(_radioData), NRFLite::REQUIRE_ACK) // THE DEFAULT
       
+        aes128_enc_single(key, &data);
       _radio.send(DESTINATION_RADIO_ID, &data, sizeof(data), NRFLite::NO_ACK);
     }
 
